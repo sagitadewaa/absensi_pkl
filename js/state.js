@@ -8,6 +8,8 @@ window.AppState = {
     historyMode: "wali",
     accessMode: "siswa",
     approvalMode: "wali", // 👈 tambah ini
+    masterSiswa: [],
+    masterSiswaFiltered: [],
     
 
     // camera

@@ -13,6 +13,10 @@
     
     <link rel="stylesheet"
         href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    
+    <!-- <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.22.5/dist/bootstrap-table.min.css"> -->
 
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -782,6 +786,67 @@
                     <h3 class="font-bold mb-3">Rekap Kehadiran per Industri</h3>
                     <div id="kepsek-rekap-industri" class="grid md:grid-cols-2 gap-3"></div>
                 </div>
+                <!-- FILTER -->
+                <div class="bg-white rounded-2xl shadow p-5 mb-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5 class="font-bold text-slate-700">
+                            <i class="fa-solid fa-filter mr-2 text-indigo-600"></i>
+                            Filter Data Siswa
+                        </h5>
+                    </div>
+                    <div class="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-1 gap-4">
+
+                        <!-- Search -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Cari
+                            </label>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input
+                                    id="kepsek-search"
+                                    type="text"
+                                    placeholder="Nama / Username"
+                                    class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <!-- Kategori -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Kelas
+                            </label>
+                            <select
+                                id="kepsek-filter-kategori"
+                                class="w-full py-2 px-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">
+                                    Semua Kelas
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Industri -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Industri
+                            </label>
+                            <select
+                                id="kepsek-filter-industri"
+                                class="w-full py-2 px-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">
+                                    Semua Industri
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Filter -->
+                        <div class="flex items-end">
+                            <button
+                                onclick="filterKepsekSiswa()"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-semibold transition">
+                                <i class="fa-solid fa-filter mr-2"></i>
+                                Terapkan
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <!-- MONITORING SISWA -->
                 <div class="bg-white rounded-2xl p-4 shadow">
                     <h3 class="font-bold mb-3">Monitoring Siswa</h3>
@@ -805,6 +870,106 @@
                 <div class="bg-white rounded-2xl p-4 shadow">
                     <h3 class="font-bold mb-3">Peta Lokasi PKL</h3>
                     <div id="kepsek-map" class="w-full h-[420px] rounded-2xl overflow-hidden"></div>
+                </div>
+            </section>
+
+            <section id="page-master-siswa" class="hidden-page">
+                <!-- HEADER -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold">
+                            Data Siswa
+                        </h1>
+                        <p class="text-slate-500">
+                            Kelola data peserta PKL
+                        </p>
+                    </div>
+                    <button
+                        onclick="loadMasterSiswa()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl">
+                        <i class="fa-solid fa-rotate-right mr-2"></i>
+                        Refresh
+                    </button>
+                </div>
+                <!-- FILTER -->
+                <div class="bg-white rounded-2xl shadow p-5 mb-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5 class="font-bold text-slate-700">
+                            <i class="fa-solid fa-filter mr-2 text-indigo-600"></i>
+                            Filter Data Siswa
+                        </h5>
+                    </div>
+                    <div class="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-1 gap-4">
+                        <!-- Search -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Cari
+                            </label>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input
+                                    id="master-search"
+                                    type="text"
+                                    placeholder="Nama / Username"
+                                    class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <!-- Kategori -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Kelas
+                            </label>
+                            <select
+                                id="master-filter-kategori"
+                                class="w-full py-2 px-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">
+                                    Semua Kelas
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Industri -->
+                        <div>
+                            <label class="text-sm font-semibold text-slate-600 mb-1 block">
+                                Industri
+                            </label>
+                            <select
+                                id="master-filter-industri"
+                                class="w-full py-2 px-3 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">
+                                    Semua Industri
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Filter -->
+                        <div class="flex items-end">
+                            <button
+                                onclick="filterMasterSiswa()"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-semibold transition">
+                                <i class="fa-solid fa-filter mr-2"></i>
+                                Terapkan
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- TABLE -->
+                <div class="bg-white rounded-2xl p-4 shadow">
+                    <h3 class="font-bold mb-3">Monitoring Siswa</h3>
+                    <div class="w-full">
+                        <table id="table-master-siswa" class="w-full text-sm display">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Kategori</th>
+                                    <th>Industri</th>
+                                    <th>Pembimbing</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -1286,7 +1451,7 @@
                                         class="w-full rounded-xl border p-3 pr-12 focus:ring-2 focus:ring-indigo-500">
                                     <button
                                         type="button"
-                                        onclick="togglePassword('old-password',this)"
+                                        onclick="togglePasswords('old-password',this)"
                                         class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
@@ -1306,7 +1471,7 @@
                                         class="w-full rounded-xl border p-3 pr-12 focus:ring-2 focus:ring-indigo-500">
                                     <button
                                         type="button"
-                                        onclick="togglePassword('new-password',this)"
+                                        onclick="togglePasswords('new-password',this)"
                                         class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
@@ -1342,7 +1507,7 @@
                                         class="w-full rounded-xl border p-3 pr-12 focus:ring-2 focus:ring-indigo-500">
                                     <button
                                         type="button"
-                                        onclick="togglePassword('confirm-password',this)"
+                                        onclick="togglePasswords('confirm-password',this)"
                                         class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
@@ -1367,7 +1532,101 @@
                     </div>
                 </div>
             </div>
-            
+            <!-- MODAL EDIT SISWA -->
+            <div id="modal-edit-siswa"
+                class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-indigo-600 text-white px-6 py-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-xl font-bold">
+                                    <i class="fa-solid fa-user-graduate mr-2"></i>
+                                    Edit Data Siswa
+                                </h3>
+                                <p class="text-indigo-100 text-sm">
+                                    Kelola data peserta PKL
+                                </p>
+                            </div>
+                            <button
+                                onclick="closeEditSiswaModal()"
+                                class="text-white text-xl">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Body -->
+                    <div class="p-6 space-y-4">
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <input type="hidden" id="edit-username">
+                        <div>
+                            <label class="font-semibold text-slate-600">
+                                Username
+                            </label>
+                            <input
+                                id="edit-username-view"
+                                readonly
+                                class="w-full mt-2 border rounded-xl px-3 py-2 bg-slate-100">
+                        </div>
+                            <div>
+                                <label class="font-semibold text-slate-600">
+                                    Kelas
+                                </label>
+                                <input
+                                    id="edit-kategori"
+                                    readonly
+                                    class="w-full mt-2 border rounded-xl px-3 py-2 bg-slate-100">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="font-semibold text-slate-600">
+                                Nama Lengkap
+                            </label>
+                            <input
+                                id="edit-nama"
+                                readonly
+                                class="w-full mt-2 border rounded-xl px-3 py-2 bg-slate-100">
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="font-semibold text-slate-600">
+                                    Pembimbing
+                                </label>
+                                <select
+                                    id="edit-parentid"
+                                    class="w-full mt-2 border rounded-xl px-3 py-2">
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-semibold text-slate-600">
+                                    Industri PKL
+                                </label>
+                                <select
+                                    id="edit-lokasiid"
+                                    class="w-full mt-2 border rounded-xl px-3 py-2">
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- Footer -->
+                    <div class="bg-slate-50 px-6 py-4 flex justify-end gap-3">
+                        <button
+                            onclick="closeEditSiswa()"
+                            class="px-5 py-2 rounded-xl bg-slate-200">
+                            Batal
+                        </button>
+                        <button
+                            onclick="saveEditSiswa()"
+                            class="px-5 py-2 rounded-xl bg-indigo-600 text-white">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i>
+                            Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
 
         <!-- BOTTOM NAV -->
         <div id="mobile-bottom-menu"
@@ -1408,6 +1667,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.22.5/dist/bootstrap-table.min.js"></script> -->
     <!-- JS -->
     <script src="js/config.js"></script>
     <script src="js/state.js"></script>

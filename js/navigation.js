@@ -170,6 +170,10 @@ function runPageLoader(pageId) {
             loadKepsekDashboard?.(true);
             break;
 
+        case "page-master-siswa":
+            loadMasterSiswa();
+            break;
+
         case "page-user-profile":
             loadProfile();
             break;
@@ -234,6 +238,12 @@ function buildMenu(user) {
                 class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
                 <i class="fa-solid fa-table-list w-5"></i>
                 <span>Rekap Bulanan</span>
+            </a>
+
+            <a href="#" onclick="navigateTo('page-master-siswa')"
+                class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+                <i class="fa-solid fa-user w-5"></i>
+                <span>Data Siswa</span>
             </a>
         `;
     }
@@ -370,6 +380,13 @@ function buildMobileBottomMenu(user) {
                 class="bottom-nav flex flex-col items-center text-xs text-gray-500 transition">
                 <i class="fa-solid fa-table-list text-lg"></i>
                 <span>Rekap</span>
+            </button>
+
+            <button onclick="navigateTo('page-master-siswa')"
+                class="sidebar-link"
+                data-page="page-master-siswa">
+                <i class="fa-solid fa-user-graduate w-5"></i>
+                <span>Data Siswa</span>
             </button>
         `;
     }
@@ -561,7 +578,7 @@ async function changePassword() {
     }
 }
 
-function togglePassword(id, btn){
+function togglePasswords(id, btn){
 
     const input=document.getElementById(id);
     const icon=btn.querySelector("i");

@@ -148,6 +148,11 @@ async function loadKepsekDashboard(useLoader = false) {
         console.log("Siswa :", siswa.length);
         console.log("Rekap :", rekapIndustri.length);
 
+        // simpan ke state
+        AppState.kepsekSiswa = siswa;
+
+        // isi dropdown filter
+        populateKepsekFilters();
         // ===============================
         // RENDER
         // ===============================
@@ -395,61 +400,496 @@ function renderKepsekTable(siswa) {
 function renderKepsekMap(rekap, lokasiId) {
     const mapEl = document.getElementById("kepsek-map");
     if (!mapEl || typeof L === "undefined") return;
-
     const data = lokasiId === "ALL"
         ? rekap
         : rekap.filter(r => r.lokasiId === lokasiId);
-
     if (!kepsekMap) {
         kepsekMap = L.map("kepsek-map").setView([-8.65, 115.21], 10);
-
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "© OpenStreetMap"
         }).addTo(kepsekMap);
     }
-
     kepsekMarkers.forEach(m => kepsekMap.removeLayer(m));
     kepsekMarkers = [];
-
     const bounds = [];
-
     data.forEach(r => {
         const lat = parseFloat(r.lat);
         const lng = parseFloat(r.lng);
-
         if (isNaN(lat) || isNaN(lng)) return;
-
         let color = "red";
         if (r.totalSiswa > 0 && r.belumHadir === 0) color = "green";
         else if (r.hadir > 0) color = "orange";
-
         const marker = L.circleMarker([lat, lng], {
             radius: 10,
             color,
             fillColor: color,
             fillOpacity: 0.8
         }).addTo(kepsekMap);
-
         marker.bindPopup(`
             <b>${r.namaIndustri}</b><br>
             Total: ${r.totalSiswa}<br>
             Hadir: ${r.hadir}<br>
             Belum: ${r.belumHadir}
         `);
-
         kepsekMarkers.push(marker);
         bounds.push([lat, lng]);
     });
-
     if (bounds.length) {
         kepsekMap.fitBounds(bounds, {
             padding: [30, 30]
         });
     }
-
     setTimeout(() => {
         kepsekMap.invalidateSize();
     }, 300);
+}
+
+function populateKepsekFilters() {
+
+    const kategoriEl =
+        document.getElementById(
+            "kepsek-filter-kategori"
+        );
+
+    const industriEl =
+        document.getElementById(
+            "kepsek-filter-industri"
+        );
+
+    if (!kategoriEl || !industriEl) return;
+
+    const kategoriSet = new Set();
+    const industriSet = new Set();
+
+    (AppState.kepsekSiswa || [])
+        .forEach(item => {
+
+            if (item.kategori) {
+                kategoriSet.add(item.kategori);
+            }
+
+            if (item.namaIndustri) {
+                industriSet.add(item.namaIndustri);
+            }
+
+        });
+
+    kategoriEl.innerHTML =
+        `<option value="">Semua Kategori</option>`;
+
+    [...kategoriSet]
+        .sort()
+        .forEach(item => {
+
+            kategoriEl.innerHTML += `
+                <option value="${item}">
+                    ${item}
+                </option>
+            `;
+
+        });
+
+    industriEl.innerHTML =
+        `<option value="">Semua Industri</option>`;
+
+    [...industriSet]
+        .sort()
+        .forEach(item => {
+
+            industriEl.innerHTML += `
+                <option value="${item}">
+                    ${item}
+                </option>
+            `;
+
+        });
+
+}
+
+function filterKepsekSiswa() {
+
+    const search =
+        document.getElementById("kepsek-search")
+        ?.value
+        .toLowerCase()
+        .trim();
+    
+    const tanggal =
+    document.getElementById("kepsek-filter-tanggal")?.value;
+
+    const kategori =
+        document.getElementById(
+            "kepsek-filter-kategori"
+        )?.value;
+
+    const industri =
+        document.getElementById(
+            "kepsek-filter-industri"
+        )?.value;
+
+    const result =
+        AppState.kepsekSiswa.filter(s => {
+
+            const matchSearch =
+
+                !search ||
+
+                s.nama?.toLowerCase()
+                    .includes(search);
+
+            const matchKategori =
+
+                !kategori ||
+
+                s.kategori === kategori;
+
+            const matchIndustri =
+
+                !industri ||
+
+                s.namaIndustri === industri;
+
+            return (
+                matchSearch &&
+                matchKategori &&
+                matchIndustri
+            );
+
+        });
+
+    renderKepsekTable(result);
+
+}
+
+//KEPSEK MASTER DATA SISWA
+
+async function loadMasterSiswa() {
+
+    try {
+
+        showLoader("Memuat data siswa...");
+
+        const data =
+            await ApiService.call({
+                action: "get_master_siswa"
+            });
+
+        AppState.masterSiswa = data || [];
+
+        populateMasterFilters();
+
+        renderMasterSiswaTable(
+            AppState.masterSiswa
+        );
+
+    } catch(err) {
+
+        console.error(err);
+
+        showToast(
+            "Gagal memuat data siswa",
+            true
+        );
+
+    } finally {
+
+        hideLoader();
+
+    }
+
+}
+
+let masterSiswaTable = null;
+function renderMasterSiswaTable(data = []) {
+    const tbody =
+        document.querySelector(
+            "#table-master-siswa tbody"
+        );
+    if (!tbody) return;
+    if (
+        $.fn.DataTable.isDataTable(
+            "#table-master-siswa"
+        )
+    ) {
+        $("#table-master-siswa")
+            .DataTable()
+            .destroy();
+    }
+    tbody.innerHTML = "";
+    data.forEach(item => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.username || ""}</td>
+                <td>${item.nama || ""}</td>
+                <td>${item.kategori || ""}</td>
+                <td>${item.namaIndustri || "-"}</td>
+                <td>${item.namaPembimbing || "-"}</td>
+                <td>
+                    <button
+                        onclick="openEditSiswa('${item.username}')"
+                        class="btn btn-warning btn-sm">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    masterSiswaTable =
+        $("#table-master-siswa").DataTable({
+            pageLength: 10,
+            responsive: true,
+            destroy: true,
+            language: {
+                search: "Cari:",
+                lengthMenu:
+                    "Tampilkan _MENU_ data",
+                info:
+                    "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                infoEmpty:
+                    "Tidak ada data",
+                zeroRecords:
+                    "Data tidak ditemukan",
+                paginate: {
+                    first: "Awal",
+                    last: "Akhir",
+                    next: "›",
+                    previous: "‹"
+                }
+            }
+        });
+}
+
+function populateMasterFilters() {
+    const kategoriEl =
+        document.getElementById(
+            "master-filter-kategori"
+        );
+    const industriEl =
+        document.getElementById(
+            "master-filter-industri"
+        );
+    if (!kategoriEl || !industriEl) return;
+    const kategoriSet =
+        new Set();
+    const industriSet =
+        new Set();
+    AppState.masterSiswa.forEach(item => {
+        if (item.kategori) {
+            kategoriSet.add(
+                item.kategori
+            );
+        }
+        if (item.namaIndustri) {
+            industriSet.add(
+                item.namaIndustri
+            );
+        }
+    });
+    kategoriEl.innerHTML =
+        `<option value="">Semua</option>`;
+    [...kategoriSet]
+        .sort()
+        .forEach(item => {
+            kategoriEl.innerHTML += `
+                <option value="${item}">
+                    ${item}
+                </option>
+            `;
+        });
+    industriEl.innerHTML =
+        `<option value="">Semua</option>`;
+    [...industriSet]
+        .sort()
+        .forEach(item => {
+            industriEl.innerHTML += `
+                <option value="${item}">
+                    ${item}
+                </option>
+            `;
+        });
+}
+
+function filterMasterSiswa() {
+    const search =
+        document.getElementById(
+            "master-search"
+        )
+        ?.value
+        .toLowerCase()
+        .trim();
+    const kategori =
+        document.getElementById(
+            "master-filter-kategori"
+        )?.value;
+    const industri =
+        document.getElementById(
+            "master-filter-industri"
+        )?.value;
+    const result =
+        AppState.masterSiswa.filter(item => {
+            const matchSearch =
+                !search ||
+                item.nama
+                    ?.toLowerCase()
+                    .includes(search) ||
+                item.username
+                    ?.toLowerCase()
+                    .includes(search);
+            const matchKategori =
+                !kategori ||
+                item.kategori === kategori;
+            const matchIndustri =
+                !industri ||
+                item.namaIndustri === industri;
+            return (
+                matchSearch &&
+                matchKategori &&
+                matchIndustri
+            );
+        });
+    AppState.masterSiswaFiltered =
+        result;
+    renderMasterSiswaTable(result);
+}
+
+async function openEditSiswa(username) {
+    try {
+        showLoader("Memuat data...");
+        const siswa =
+            await ApiService.call({
+                action: "get_siswa_detail",
+                username
+            });
+        const guruList =
+            await ApiService.call({
+                action: "get_guru_list"
+            });
+        const lokasiList =
+            await ApiService.call({
+                action: "get_lokasi_list"
+            });
+        document.getElementById("edit-username")
+            .value = siswa.username;
+        document.getElementById("edit-username-view")
+            .value = siswa.username;
+        document.getElementById("edit-nama")
+            .value = siswa.nama;
+        document.getElementById("edit-kategori")
+            .value = siswa.kategori;
+
+        populateGuruDropdown(
+            guruList,
+            siswa.parentId
+        );
+        populateLokasiDropdown(
+            lokasiList,
+            siswa.lokasiId
+        );
+        document
+            .getElementById("modal-edit-siswa")
+            .classList
+            .remove("hidden");
+    }
+    catch(err){
+        console.error(err);
+        showToast(
+            "Gagal memuat data siswa",
+            true
+        );
+    }
+    finally{
+        hideLoader();
+    }
+}
+
+function populateGuruDropdown(
+    list,
+    selectedId
+){
+
+    const el =
+        document.getElementById(
+            "edit-parentid"
+        );
+
+    el.innerHTML = "";
+
+    list.forEach(guru=>{
+
+        el.innerHTML += `
+            <option
+                value="${guru.id}"
+                ${guru.id===selectedId ? "selected" : ""}>
+                ${guru.nama}
+            </option>
+        `;
+
+    });
+
+}
+
+function populateLokasiDropdown(
+    list,
+    selectedId
+){
+    const el =
+        document.getElementById(
+            "edit-lokasiid"
+        );
+    el.innerHTML = "";
+    list.forEach(item=>{
+        el.innerHTML += `
+            <option
+                value="${item.lokasiId}"
+                ${item.lokasiId===selectedId ? "selected" : ""}>
+                ${item.namaIndustri}
+            </option>
+        `;
+    });
+}
+
+function closeEditSiswa() {
+    document
+        .getElementById("modal-edit-siswa")
+        .classList
+        .add("hidden");
+}
+
+async function saveEditSiswa(){
+    try{
+        showLoader("Menyimpan data...");
+        const res =
+            await ApiService.call({
+                action:"update_siswa",
+                username:
+                    document.getElementById("edit-username").value,
+                nama:
+                    document.getElementById("edit-nama").value,
+                kategori:
+                    document.getElementById("edit-kategori").value,
+                parentId:
+                    document.getElementById("edit-parentid").value,
+                lokasiId:
+                    document.getElementById("edit-lokasiid").value,
+
+            });
+        showToast(
+            "Data berhasil diperbarui"
+        );
+        closeEditSiswa();
+        await loadMasterSiswa();
+    }
+    catch(error){
+        console.error(error);
+        showToast(
+            "Gagal menyimpan data",
+            true
+        );
+    }
+    finally{
+        hideLoader();
+    }
+
 }
 
 // ===============================

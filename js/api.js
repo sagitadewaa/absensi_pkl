@@ -5,29 +5,40 @@
 const ApiService = {
 
     async call(payload) {
-        if (CONFIG.IS_PREVIEW) {
-            return this.mock(payload);
+
+    if (CONFIG.IS_PREVIEW) {
+        return this.mock(payload);
+    }
+
+    try {
+
+        const response = await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+
+        console.log("=== RAW RESPONSE ===");
+        console.log(text);
+
+        const result = JSON.parse(text);
+
+        if (result.status === "success") {
+            return result.data;
         }
 
-        try {
-            const response = await fetch(CONFIG.GAS_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
+        throw new Error(result.message);
 
-            const result = await response.json();
+    } catch (error) {
 
-            if (result.status === "success") {
-                return result.data;
-            }
+        console.error("API Error:", error);
 
-            throw new Error(result.message);
+        throw error;
 
-        } catch (error) {
-            console.error("API Error:", error);
-            throw error;
-        }
-    },
+    }
+
+},
 
     async mock(payload) {
         return new Promise((resolve, reject) => {
