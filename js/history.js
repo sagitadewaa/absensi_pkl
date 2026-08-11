@@ -625,22 +625,415 @@ function renderStudentHistoryCards(riwayat, statusData = []) {
     container.innerHTML = html;
 }
 
-function renderNormalHistoryBlock(masuk, pulang, statusHari) {
+// function renderNormalHistoryBlock(masuk, pulang, statusHari) {
+//     return `
+//         <div class="history-action">
+//             <div class="history-badge in">Scan In</div>
+
+//             <div class="history-time">
+//                 ${masuk ? masuk.timestamp.split(" ")[1] : "00:00:00"}
+//             </div>
+
+//             <div class="history-note">
+//                 ${masuk ? `${Math.round(masuk.jarak || 0)} meter` : "Belum absen"}
+//             </div>
+//         </div>
+
+//         <div class="history-action">
+//             <div class="history-badge out">Scan Out</div>
+
+//             ${
+//                 pulang
+//                 ? `
+//                     <div class="history-time">
+//                         ${pulang.timestamp.split(" ")[1]}
+//                     </div>
+
+//                     <div class="history-note">
+//                         ${Math.round(pulang.jarak || 0)} meter
+//                     </div>
+//                 `
+//                 : (
+//                     statusHari &&
+//                     String(statusHari.approval).toLowerCase() === "approved" &&
+//                     String(statusHari.status).toLowerCase() === "lupa absen"
+//                 )
+//                 ? `
+//                     <div class="history-time text-blue-600 font-semibold">
+//                         Lupa Absen
+//                     </div>
+
+//                     <div class="history-note">
+//                         ${statusHari.keterangan || ""}
+//                     </div>
+//                 `
+//                 : `
+//                     <div class="history-time">
+//                         00:00:00
+//                     </div>
+
+//                     <div class="history-note">
+//                         Belum absen
+//                     </div>
+//                 `
+//             }
+//         </div>
+//     `;
+// }
+
+function convertDriveUrl(url) {
+
+    if (!url) return "";
+
+    try {
+
+        // format:
+        // https://drive.google.com/file/d/FILE_ID/view
+
+        let match =
+            url.match(/\/d\/([^\/]+)/);
+
+        if (match && match[1]) {
+
+            return `https://lh3.googleusercontent.com/d/${match[1]}`;
+
+        }
+
+        // format:
+        // https://drive.google.com/uc?export=view&id=FILE_ID
+
+        match =
+            url.match(/[?&]id=([^&]+)/);
+
+        if (match && match[1]) {
+
+            return `https://lh3.googleusercontent.com/d/${match[1]}`;
+
+        }
+
+        return url;
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        return url;
+
+    }
+
+}
+
+function previewFoto({
+    url,
+    tipe,
+    nama,
+    timestamp,
+    namaIndustri,
+    mapUrl,
+    lat,
+    lng,
+    jarak,
+    validLokasi
+}) {
+
+    if (!url) {
+
+        Swal.fire({
+            icon: "warning",
+            title: "Foto Tidak Tersedia",
+            text: "Foto absensi tidak ditemukan."
+        });
+
+        return;
+
+    }
+
+    const imageUrl =
+        convertDriveUrl(url);
+
+    const title =
+        tipe === "pulang"
+            ? "Foto Absensi Pulang"
+            : "Foto Absensi Masuk";
+
+    Swal.fire({
+
+        title,
+
+        width: 650,
+
+        showCloseButton: true,
+
+        showConfirmButton: false,
+
+        html: `
+
+            <div class="text-center">
+
+                <div style="
+                    font-size:18px;
+                    font-weight:700;
+                    color:#1e293b;
+                    margin-bottom:5px;
+                ">
+                    ${nama || "-"}
+                </div>
+
+                <div style="
+                    color:#64748b;
+                    font-size:13px;
+                    margin-bottom:15px;
+                ">
+                    ${timestamp || "-"}
+                </div>
+
+                <div style="
+                    margin-bottom:10px;
+                    font-size:14px;
+                    font-weight:600;
+                    color:#334155;
+                ">
+                    🏢 ${namaIndustri || "-"}
+                </div>
+
+                <div style="
+                    display:flex;
+                    justify-content:center;
+                    gap:8px;
+                    flex-wrap:wrap;
+                    margin-bottom:15px;
+                ">
+
+                    <a
+                        href="${mapUrl}"
+                        target="_blank"
+                        style="
+                            background:#dbeafe;
+                            color:#1d4ed8;
+                            padding:8px 14px;
+                            border-radius:999px;
+                            text-decoration:none;
+                            font-size:12px;
+                            font-weight:600;
+                        ">
+                        📍 Google Maps
+                    </a>
+
+                    <a
+                        href="https://waze.com/ul?ll=${lat},${lng}&navigate=yes"
+                        target="_blank"
+                        style="
+                            background:#e0f2fe;
+                            color:#0369a1;
+                            padding:8px 14px;
+                            border-radius:999px;
+                            text-decoration:none;
+                            font-size:12px;
+                            font-weight:600;
+                        ">
+                        🧭 Waze
+                    </a>
+
+                    <span style="
+                        background:#dcfce7;
+                        color:#166534;
+                        padding:8px 12px;
+                        border-radius:999px;
+                        font-size:12px;
+                        font-weight:600;
+                    ">
+                        📏 ${Math.round(jarak || 0)} Meter
+                    </span>
+
+                    <span style="
+                        background:${validLokasi ? '#dcfce7' : '#fee2e2'};
+                        color:${validLokasi ? '#166534' : '#b91c1c'};
+                        padding:8px 12px;
+                        border-radius:999px;
+                        font-size:12px;
+                        font-weight:600;
+                    ">
+                        ${validLokasi
+                            ? '✅ Lokasi Valid'
+                            : '❌ Lokasi Tidak Valid/Diluar Radius'}
+                    </span>
+
+                </div>
+
+                <div style="
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                    margin-top:10px;
+                ">
+                    <img
+                        src="${imageUrl}"
+                        style="
+                            width:auto;
+                            max-width:320px;
+                            max-height:280px;
+                            object-fit:contain;
+                            border-radius:12px;
+                            border:1px solid #e2e8f0;
+                            box-shadow:0 8px 24px rgba(0,0,0,.15);
+                        "
+                    >
+                </div>
+
+            </div>
+        `
+
+    });
+
+}
+
+// function renderNormalHistoryBlock(masuk, pulang, statusHari) {
+//     return `
+//         <div class="history-action">
+//             <div class="history-badge in">Scan In</div>
+
+//             <div class="history-time">
+//                 ${masuk ? masuk.timestamp.split(" ")[1] : "00:00:00"}
+//             </div>
+
+//             <div class="history-note">
+//                 ${masuk ? `${Math.round(masuk.jarak || 0)} meter` : "Belum absen"}
+//             </div>
+//         </div>
+
+//         <div class="history-action">
+//             <div class="history-badge out">Scan Out</div>
+
+//             ${
+//                 pulang
+//                 ? `
+//                     <div class="history-time">
+//                         ${pulang.timestamp.split(" ")[1]}
+//                     </div>
+
+//                     <div class="history-note">
+//                         ${Math.round(pulang.jarak || 0)} meter
+//                     </div>
+//                 `
+//                 : (
+//                     statusHari &&
+//                     String(statusHari.approval).toLowerCase() === "approved" &&
+//                     String(statusHari.status).toLowerCase() === "lupa absen"
+//                 )
+//                 ? `
+//                     <div class="history-time text-blue-600 font-semibold">
+//                         Lupa Absen
+//                     </div>
+
+//                     <div class="history-note">
+//                         ${statusHari.keterangan || ""}
+//                     </div>
+//                 `
+//                 : `
+//                     <div class="history-time">
+//                         00:00:00
+//                     </div>
+
+//                     <div class="history-note">
+//                         Belum absen
+//                     </div>
+//                 `
+//             }
+//         </div>
+//     `;
+// }
+function renderNormalHistoryBlock(
+    masuk,
+    pulang,
+    statusHari
+) {
+
     return `
+
         <div class="history-action">
-            <div class="history-badge in">Scan In</div>
+
+            ${
+                masuk?.fotoUrl
+                ? `
+                    <button
+                        onclick='previewFoto({
+                            url:"${masuk.fotoUrl}",
+                            tipe:"masuk",
+                            nama:"${masuk.nama}",
+                            timestamp:"${masuk.timestamp}",
+                            namaIndustri:"${masuk.namaIndustri}",
+                            mapUrl:"${masuk.maps}",
+                            lat:"${masuk.lat}",
+                            lng:"${masuk.lng}",
+                            jarak:${masuk.jarak || 0},
+                            validLokasi:${Number(masuk.jarak || 0) <= 200}
+                        })'
+                        class="history-badge in cursor-pointer hover:opacity-90">
+
+                        <i class="fa-solid fa-camera mr-1"></i>
+                        <br>
+                        Scan In
+
+                    </button>
+                `
+                : `
+                    <div class="history-badge in">
+                        Scan In
+                    </div>
+                `
+            }
 
             <div class="history-time">
-                ${masuk ? masuk.timestamp.split(" ")[1] : "00:00:00"}
+                ${
+                    masuk
+                    ? masuk.timestamp.split(" ")[1]
+                    : "00:00:00"
+                }
             </div>
 
             <div class="history-note">
-                ${masuk ? `${Math.round(masuk.jarak || 0)} meter` : "Belum absen"}
+                ${
+                    masuk
+                    ? `${Math.round(masuk.jarak || 0)} meter`
+                    : "Belum absen"
+                }
             </div>
+
         </div>
 
         <div class="history-action">
-            <div class="history-badge out">Scan Out</div>
+
+            ${
+                pulang?.fotoUrl
+                ? `
+                    <button
+                        onclick='previewFoto({
+                            url:"${pulang.fotoUrl}",
+                            tipe:"pulang",
+                            nama:"${pulang.nama}",
+                            timestamp:"${pulang.timestamp}",
+                            namaIndustri:"${pulang.namaIndustri}",
+                            mapUrl:"${pulang.maps}",
+                            lat:"${pulang.lat}",
+                            lng:"${pulang.lng}",
+                            jarak:${pulang.jarak || 0},
+                            validLokasi:${Number(pulang.jarak || 0) <= 200}
+                        })'
+                        class="history-badge out cursor-pointer hover:opacity-90">
+
+                        <i class="fa-solid fa-camera mr-1"></i>
+                        <br>
+                        Scan Out
+
+                    </button>
+                `
+                : `
+                    <div class="history-badge out">
+                        Scan Out
+                    </div>
+                `
+            }
 
             ${
                 pulang
@@ -655,8 +1048,10 @@ function renderNormalHistoryBlock(masuk, pulang, statusHari) {
                 `
                 : (
                     statusHari &&
-                    String(statusHari.approval).toLowerCase() === "approved" &&
-                    String(statusHari.status).toLowerCase() === "lupa absen"
+                    String(statusHari.approval)
+                        .toLowerCase() === "approved" &&
+                    String(statusHari.status)
+                        .toLowerCase() === "lupa absen"
                 )
                 ? `
                     <div class="history-time text-blue-600 font-semibold">
@@ -677,7 +1072,9 @@ function renderNormalHistoryBlock(masuk, pulang, statusHari) {
                     </div>
                 `
             }
+
         </div>
+
     `;
 }
 
